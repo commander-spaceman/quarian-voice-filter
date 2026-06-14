@@ -53,3 +53,11 @@ version = "0.1.0"
 dependencies = [
  "quarian-voice-filter",
 ]
+
+[[package]]
+name = "quarian-voice-filter-tests"
+version = "0.1.0"
+dependencies = [
+ "hound",
+ "quarian-voice-filter",
+]

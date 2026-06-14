@@ -2,6 +2,7 @@
 members = [
     "lib",
     "cli",
+    "tests",
 ]
 resolver = "2"
 

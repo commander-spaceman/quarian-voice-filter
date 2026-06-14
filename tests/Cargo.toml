@@ -1,0 +1,18 @@
+[package]
+name = "quarian-voice-filter-tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+quarian-voice-filter.workspace = true
+hound = "3.5"
+
+[[test]]
+name = "regression"
+path = "regression.rs"
