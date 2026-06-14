@@ -92,6 +92,27 @@ fn process_mono_f32_filters_change_the_signal() {
     assert_ne!(output, input);
 }
 
+#[test]
+fn process_mono_f32_pitch_shift_increases_estimated_frequency() {
+    let input = sine_wave(440.0, 24_000, 24_000);
+    let params = QuarianVoiceFilterParams {
+        pitch_semitones: 3.0,
+        dry_gain: 0.0,
+        wet_gain: 1.0,
+        hpf: 0.0,
+        lpf: 0.0,
+        notch: 0.0,
+        drive: 0.0,
+        ..Default::default()
+    };
+
+    let output = process_mono_f32(&input, 24_000, &params).unwrap();
+    let input_frequency = estimate_zero_crossing_frequency(center_slice(&input), 24_000);
+    let output_frequency = estimate_zero_crossing_frequency(center_slice(&output), 24_000);
+
+    assert!(output_frequency > input_frequency * 1.05);
+}
+
 fn write_test_wav(samples: &[f32], spec: WavSpec) -> Vec<u8> {
     let mut cursor = Cursor::new(Vec::new());
 
@@ -112,4 +133,26 @@ fn read_f32_wav(bytes: &[u8]) -> (WavSpec, Vec<f32>) {
     let samples = reader.samples::<f32>().map(Result::unwrap).collect();
 
     (spec, samples)
+}
+
+fn sine_wave(frequency_hz: f32, sample_rate: u32, length: usize) -> Vec<f32> {
+    let angular_step = 2.0 * std::f32::consts::PI * frequency_hz / sample_rate as f32;
+    (0..length)
+        .map(|index| (angular_step * index as f32).sin())
+        .collect()
+}
+
+fn estimate_zero_crossing_frequency(samples: &[f32], sample_rate: u32) -> f32 {
+    let zero_crossings = samples
+        .windows(2)
+        .filter(|window| window[0] <= 0.0 && window[1] > 0.0)
+        .count();
+
+    zero_crossings as f32 * sample_rate as f32 / samples.len() as f32
+}
+
+fn center_slice(samples: &[f32]) -> &[f32] {
+    let start = samples.len() / 4;
+    let end = samples.len() - start;
+    &samples[start..end]
 }

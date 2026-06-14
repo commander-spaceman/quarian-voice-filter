@@ -2,6 +2,7 @@ mod dsp;
 mod error;
 mod filters;
 mod params;
+mod pitch;
 mod wav;
 
 pub use crate::error::Error;

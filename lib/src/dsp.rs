@@ -1,4 +1,5 @@
 use crate::filters;
+use crate::pitch;
 use crate::QuarianVoiceFilterParams;
 
 const MAX_OUTPUT_PEAK: f32 = 0.99;
@@ -9,7 +10,11 @@ pub fn process_mono_f32(
     sample_rate: u32,
     params: &QuarianVoiceFilterParams,
 ) -> Vec<f32> {
-    let mut wet = samples.to_vec();
+    let mut wet = if params.pitch_semitones.abs() > f32::EPSILON {
+        pitch::pitch_shift(samples, sample_rate, params.pitch_semitones)
+    } else {
+        samples.to_vec()
+    };
 
     if params.hpf > 0.0 {
         filters::apply_high_pass(&mut wet, sample_rate, params.hpf);
@@ -98,5 +103,31 @@ mod tests {
             .fold(0.0_f32, f32::max);
 
         assert!((peak - 0.99).abs() < 1e-6);
+    }
+
+    #[test]
+    fn pitch_shift_changes_waveform_when_enabled() {
+        let input = sine_wave(440.0, 24_000, 2_048);
+        let params = QuarianVoiceFilterParams {
+            pitch_semitones: 3.0,
+            dry_gain: 0.0,
+            wet_gain: 1.0,
+            hpf: 0.0,
+            lpf: 0.0,
+            notch: 0.0,
+            drive: 0.0,
+        };
+
+        let output = process_mono_f32(&input, 24_000, &params);
+
+        assert_eq!(output.len(), input.len());
+        assert_ne!(output, input);
+    }
+
+    fn sine_wave(frequency_hz: f32, sample_rate: u32, length: usize) -> Vec<f32> {
+        let angular_step = 2.0 * std::f32::consts::PI * frequency_hz / sample_rate as f32;
+        (0..length)
+            .map(|index| (angular_step * index as f32).sin())
+            .collect()
     }
 }
