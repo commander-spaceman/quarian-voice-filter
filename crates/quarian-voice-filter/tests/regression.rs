@@ -22,7 +22,15 @@ fn process_wav_bytes_downmixes_stereo_and_preserves_sample_rate() {
             sample_format: SampleFormat::Float,
         },
     );
-    let params = QuarianVoiceFilterParams::default();
+    let params = QuarianVoiceFilterParams {
+        dry_gain: 1.0,
+        wet_gain: 0.0,
+        hpf: 0.0,
+        lpf: 0.0,
+        notch: 0.0,
+        drive: 0.0,
+        ..Default::default()
+    };
 
     let output = process_wav_bytes(&input, &params).unwrap();
     let (spec, samples) = read_f32_wav(&output);
@@ -45,6 +53,43 @@ fn process_wav_bytes_rejects_empty_input() {
         error,
         Error::InvalidInput("input WAV bytes cannot be empty")
     ));
+}
+
+#[test]
+fn process_mono_f32_applies_drive_and_stays_bounded() {
+    let params = QuarianVoiceFilterParams {
+        dry_gain: 0.0,
+        wet_gain: 1.0,
+        hpf: 0.0,
+        lpf: 0.0,
+        notch: 0.0,
+        drive: 0.8,
+        ..Default::default()
+    };
+
+    let output = process_mono_f32(&[0.8, -0.8], 24_000, &params).unwrap();
+
+    assert!(output[0] > 0.8);
+    assert!(output[1] < -0.8);
+    assert!(output.iter().all(|sample| sample.abs() <= 0.99));
+}
+
+#[test]
+fn process_mono_f32_filters_change_the_signal() {
+    let params = QuarianVoiceFilterParams {
+        dry_gain: 0.0,
+        wet_gain: 1.0,
+        hpf: 200.0,
+        lpf: 7_000.0,
+        notch: 1_000.0,
+        drive: 0.0,
+        ..Default::default()
+    };
+    let input = vec![1.0; 64];
+
+    let output = process_mono_f32(&input, 24_000, &params).unwrap();
+
+    assert_ne!(output, input);
 }
 
 fn write_test_wav(samples: &[f32], spec: WavSpec) -> Vec<u8> {

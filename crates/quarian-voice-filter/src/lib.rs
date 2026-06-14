@@ -1,4 +1,6 @@
+mod dsp;
 mod error;
+mod filters;
 mod params;
 mod wav;
 
@@ -18,11 +20,11 @@ pub fn process_wav_bytes(
 pub fn process_mono_f32(
     samples: &[f32],
     sample_rate: u32,
-    _params: &QuarianVoiceFilterParams,
+    params: &QuarianVoiceFilterParams,
 ) -> Result<Vec<f32>, Error> {
     if sample_rate == 0 {
         return Err(Error::InvalidInput("sample_rate must be greater than zero"));
     }
 
-    Ok(samples.to_vec())
+    Ok(dsp::process_mono_f32(samples, sample_rate, params))
 }
