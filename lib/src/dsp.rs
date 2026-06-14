@@ -74,6 +74,7 @@ mod tests {
     fn uses_dry_path_when_wet_gain_is_zero() {
         let samples = vec![0.25, -0.5, 0.75];
         let params = QuarianVoiceFilterParams {
+            pitch_semitones: 0.0,
             dry_gain: 1.0,
             wet_gain: 0.0,
             ..Default::default()
@@ -87,6 +88,7 @@ mod tests {
     fn normalizes_when_mix_exceeds_peak_limit() {
         let samples = vec![1.0, -1.0];
         let params = QuarianVoiceFilterParams {
+            pitch_semitones: 0.0,
             dry_gain: 1.0,
             wet_gain: 1.0,
             hpf: 0.0,

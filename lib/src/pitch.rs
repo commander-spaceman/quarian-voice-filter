@@ -1,18 +1,34 @@
-pub fn pitch_shift(samples: &[f32], _sample_rate: u32, semitones: f32) -> Vec<f32> {
+use crate::phase_vocoder;
+use crate::resample;
+use crate::stft::{self, StftConfig};
+
+pub fn pitch_shift(samples: &[f32], sample_rate: u32, semitones: f32) -> Vec<f32> {
     if samples.is_empty() || semitones.abs() < f32::EPSILON {
         return samples.to_vec();
     }
 
-    let rate = 2.0_f32.powf(semitones / 12.0);
+    let rate = 2.0_f32.powf(-semitones / 12.0);
     if !rate.is_finite() || rate <= 0.0 {
         return samples.to_vec();
     }
 
-    let center = (samples.len().saturating_sub(1)) as f32 / 2.0;
-    (0..samples.len())
+    let config = StftConfig::default();
+    let spectrum = stft::stft(samples, &config);
+    let stretched = phase_vocoder::stretch(&spectrum, rate);
+    let stretched_length = ((samples.len() as f32) / rate).round() as usize;
+    let time_stretched = stft::istft(&stretched, &config, stretched_length);
+    let resample_ratio = sample_rate as f32 / (sample_rate as f32 / rate);
+    let shifted = resample::resample_mono(&time_stretched, resample_ratio)
+        .unwrap_or_else(|| fallback_resample(&time_stretched, resample_ratio));
+
+    stft::fix_length(&shifted, samples.len())
+}
+
+fn fallback_resample(samples: &[f32], ratio: f32) -> Vec<f32> {
+    let output_len = ((samples.len() as f32) * ratio).round().max(1.0) as usize;
+    (0..output_len)
         .map(|index| {
-            let centered_index = index as f32 - center;
-            let source_pos = center + centered_index * rate;
+            let source_pos = index as f32 / ratio;
             interpolate_linear(samples, source_pos)
         })
         .collect()

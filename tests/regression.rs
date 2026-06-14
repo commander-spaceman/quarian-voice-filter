@@ -58,6 +58,7 @@ fn process_wav_bytes_rejects_empty_input() {
 #[test]
 fn process_mono_f32_applies_drive_and_stays_bounded() {
     let params = QuarianVoiceFilterParams {
+        pitch_semitones: 0.0,
         dry_gain: 0.0,
         wet_gain: 1.0,
         hpf: 0.0,
@@ -77,6 +78,7 @@ fn process_mono_f32_applies_drive_and_stays_bounded() {
 #[test]
 fn process_mono_f32_filters_change_the_signal() {
     let params = QuarianVoiceFilterParams {
+        pitch_semitones: 0.0,
         dry_gain: 0.0,
         wet_gain: 1.0,
         hpf: 200.0,

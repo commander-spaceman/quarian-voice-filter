@@ -2,7 +2,10 @@ mod dsp;
 mod error;
 mod filters;
 mod params;
+mod phase_vocoder;
 mod pitch;
+mod resample;
+mod stft;
 mod wav;
 
 pub use crate::error::Error;
