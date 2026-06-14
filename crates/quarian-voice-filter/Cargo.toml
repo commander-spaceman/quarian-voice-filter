@@ -7,3 +7,4 @@ rust-version.workspace = true
 description = "Reusable Rust library for Quarian-style voice filtering"
 
 [dependencies]
+hound = "3.5"
