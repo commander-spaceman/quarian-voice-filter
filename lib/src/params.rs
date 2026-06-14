@@ -1,4 +1,7 @@
-#[derive(Debug, Clone, Copy, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct QuarianVoiceFilterParams {
     pub pitch_semitones: f32,
     pub dry_gain: f32,
