@@ -64,9 +64,8 @@ pub fn encode_wav_bytes(
     }
 
     let mut cursor = Cursor::new(Vec::new());
-    let output_channels = channels.max(2);
     let spec = WavSpec {
-        channels: output_channels,
+        channels,
         sample_rate,
         bits_per_sample: 16,
         sample_format: SampleFormat::Int,
@@ -84,7 +83,7 @@ pub fn encode_wav_bytes(
         let mut writer = WavWriter::new(&mut cursor, spec).map_err(Error::WavEncode)?;
         for &sample in samples {
             let sample = f32_to_i16(sample);
-            for _ in 0..output_channels {
+            for _ in 0..channels {
                 writer.write_sample(sample).map_err(Error::WavEncode)?;
             }
         }

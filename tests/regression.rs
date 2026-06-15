@@ -47,7 +47,7 @@ fn process_wav_bytes_downmixes_stereo_and_preserves_sample_rate() {
 }
 
 #[test]
-fn process_wav_bytes_upmixes_mono_output_to_stereo() {
+fn process_wav_bytes_preserves_mono_output() {
     let input = write_test_wav(
         &[0.25, -0.25],
         WavSpec {
@@ -70,15 +70,13 @@ fn process_wav_bytes_upmixes_mono_output_to_stereo() {
     let output = process_wav_bytes(&input, &params).unwrap();
     let (spec, samples) = read_f32_wav(&output);
 
-    assert_eq!(spec.channels, 2);
+    assert_eq!(spec.channels, 1);
     assert_eq!(spec.sample_rate, 24_000);
     assert_eq!(spec.sample_format, SampleFormat::Int);
     assert_eq!(spec.bits_per_sample, 16);
-    assert_eq!(samples.len(), 4);
+    assert_eq!(samples.len(), 2);
     assert!((samples[0] - 0.25).abs() < 1e-4);
-    assert!((samples[1] - 0.25).abs() < 1e-4);
-    assert!((samples[2] + 0.25).abs() < 1e-4);
-    assert!((samples[3] + 0.25).abs() < 1e-4);
+    assert!((samples[1] + 0.25).abs() < 1e-4);
 }
 
 #[test]
