@@ -29,6 +29,19 @@ _Shoutout to my gf for lending her voice to the video_
 - Drive / saturation and dry-wet mixing
 - CLI for batch-style file processing
 
+## Requirements
+
+- Rust 1.96.0 or newer
+- Cargo
+
+## Build
+
+Build the CLI:
+
+```powershell
+cargo build -p quarian-voice-filter-cli --release
+```
+
 ## Usage
 
 Run the CLI on a WAV file:
