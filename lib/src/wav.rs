@@ -64,11 +64,12 @@ pub fn encode_wav_bytes(
     }
 
     let mut cursor = Cursor::new(Vec::new());
+    let output_channels = channels.max(2);
     let spec = WavSpec {
-        channels,
+        channels: output_channels,
         sample_rate,
-        bits_per_sample: 32,
-        sample_format: SampleFormat::Float,
+        bits_per_sample: 16,
+        sample_format: SampleFormat::Int,
     };
 
     eprintln!(
@@ -82,7 +83,8 @@ pub fn encode_wav_bytes(
     {
         let mut writer = WavWriter::new(&mut cursor, spec).map_err(Error::WavEncode)?;
         for &sample in samples {
-            for _ in 0..channels {
+            let sample = f32_to_i16(sample);
+            for _ in 0..output_channels {
                 writer.write_sample(sample).map_err(Error::WavEncode)?;
             }
         }
@@ -168,6 +170,15 @@ fn normalize_wav_header(input: &[u8]) -> Vec<u8> {
     }
 
     bytes
+}
+
+fn f32_to_i16(sample: f32) -> i16 {
+    let clamped = sample.clamp(-1.0, 1.0);
+    if clamped <= -1.0 {
+        i16::MIN
+    } else {
+        (clamped * i16::MAX as f32).round() as i16
+    }
 }
 
 fn read_samples<R>(reader: &mut WavReader<R>, spec: WavSpec) -> Result<Vec<f32>, Error>
