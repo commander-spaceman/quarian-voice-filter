@@ -8,6 +8,7 @@ use crate::Error;
 pub struct MonoAudio {
     pub sample_rate: u32,
     pub samples: Vec<f32>,
+    pub channels: u16,
 }
 
 pub fn decode_wav_bytes(input: &[u8]) -> Result<MonoAudio, Error> {
@@ -29,17 +30,25 @@ pub fn decode_wav_bytes(input: &[u8]) -> Result<MonoAudio, Error> {
     Ok(MonoAudio {
         sample_rate: spec.sample_rate,
         samples,
+        channels: spec.channels,
     })
 }
 
-pub fn encode_wav_bytes(samples: &[f32], sample_rate: u32) -> Result<Vec<u8>, Error> {
+pub fn encode_wav_bytes(
+    samples: &[f32],
+    sample_rate: u32,
+    channels: u16,
+) -> Result<Vec<u8>, Error> {
     if sample_rate == 0 {
         return Err(Error::InvalidInput("sample_rate must be greater than zero"));
+    }
+    if channels == 0 {
+        return Err(Error::InvalidInput("channels must be greater than zero"));
     }
 
     let mut cursor = Cursor::new(Vec::new());
     let spec = WavSpec {
-        channels: 1,
+        channels,
         sample_rate,
         bits_per_sample: 32,
         sample_format: SampleFormat::Float,
@@ -48,7 +57,9 @@ pub fn encode_wav_bytes(samples: &[f32], sample_rate: u32) -> Result<Vec<u8>, Er
     {
         let mut writer = WavWriter::new(&mut cursor, spec).map_err(Error::WavEncode)?;
         for &sample in samples {
-            writer.write_sample(sample).map_err(Error::WavEncode)?;
+            for _ in 0..channels {
+                writer.write_sample(sample).map_err(Error::WavEncode)?;
+            }
         }
         writer.finalize().map_err(Error::WavEncode)?;
     }

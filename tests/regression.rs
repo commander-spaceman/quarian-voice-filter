@@ -35,13 +35,15 @@ fn process_wav_bytes_downmixes_stereo_and_preserves_sample_rate() {
     let output = process_wav_bytes(&input, &params).unwrap();
     let (spec, samples) = read_f32_wav(&output);
 
-    assert_eq!(spec.channels, 1);
+    assert_eq!(spec.channels, 2);
     assert_eq!(spec.sample_rate, 24_000);
     assert_eq!(spec.sample_format, SampleFormat::Float);
     assert_eq!(spec.bits_per_sample, 32);
-    assert_eq!(samples.len(), 2);
+    assert_eq!(samples.len(), 4);
     assert!((samples[0] - 0.0).abs() < 1e-6);
-    assert!((samples[1] - 0.5).abs() < 1e-6);
+    assert!((samples[1] - 0.0).abs() < 1e-6);
+    assert!((samples[2] - 0.5).abs() < 1e-6);
+    assert!((samples[3] - 0.5).abs() < 1e-6);
 }
 
 #[test]

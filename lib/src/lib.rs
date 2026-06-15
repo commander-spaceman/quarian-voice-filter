@@ -18,7 +18,7 @@ pub fn process_wav_bytes(
 ) -> Result<Vec<u8>, Error> {
     let mono = wav::decode_wav_bytes(input)?;
     let processed = process_mono_f32(&mono.samples, mono.sample_rate, params)?;
-    wav::encode_wav_bytes(&processed, mono.sample_rate)
+    wav::encode_wav_bytes(&processed, mono.sample_rate, mono.channels)
 }
 
 pub fn process_mono_f32(
