@@ -16,9 +16,24 @@ pub fn process_wav_bytes(
     input: &[u8],
     params: &QuarianVoiceFilterParams,
 ) -> Result<Vec<u8>, Error> {
+    process_wav_bytes_with_mode(input, params, wav::OutputMode::Preserve)
+}
+
+pub fn process_wav_bytes_stereo(
+    input: &[u8],
+    params: &QuarianVoiceFilterParams,
+) -> Result<Vec<u8>, Error> {
+    process_wav_bytes_with_mode(input, params, wav::OutputMode::ForceStereo)
+}
+
+fn process_wav_bytes_with_mode(
+    input: &[u8],
+    params: &QuarianVoiceFilterParams,
+    output_mode: wav::OutputMode,
+) -> Result<Vec<u8>, Error> {
     let mono = wav::decode_wav_bytes(input)?;
     let processed = process_mono_f32(&mono.samples, mono.sample_rate, params)?;
-    wav::encode_wav_bytes(&processed, mono.sample_rate, mono.channels)
+    wav::encode_wav_bytes(&processed, mono.sample_rate, mono.channels, output_mode)
 }
 
 pub fn process_mono_f32(

@@ -1,7 +1,9 @@
 use std::io::Cursor;
 
 use hound::{SampleFormat, WavReader, WavSpec, WavWriter};
-use quarian_voice_filter::{process_mono_f32, process_wav_bytes, Error, QuarianVoiceFilterParams};
+use quarian_voice_filter::{
+    process_mono_f32, process_wav_bytes, process_wav_bytes_stereo, Error, QuarianVoiceFilterParams,
+};
 
 #[test]
 fn process_mono_f32_requires_non_zero_sample_rate() {
@@ -77,6 +79,41 @@ fn process_wav_bytes_preserves_mono_output() {
     assert_eq!(samples.len(), 2);
     assert!((samples[0] - 0.25).abs() < 1e-4);
     assert!((samples[1] + 0.25).abs() < 1e-4);
+}
+
+#[test]
+fn process_wav_bytes_stereo_upmixes_mono_output() {
+    let input = write_test_wav(
+        &[0.25, -0.25],
+        WavSpec {
+            channels: 1,
+            sample_rate: 24_000,
+            bits_per_sample: 32,
+            sample_format: SampleFormat::Float,
+        },
+    );
+    let params = QuarianVoiceFilterParams {
+        dry_gain: 1.0,
+        wet_gain: 0.0,
+        hpf: 0.0,
+        lpf: 0.0,
+        notch: 0.0,
+        drive: 0.0,
+        ..Default::default()
+    };
+
+    let output = process_wav_bytes_stereo(&input, &params).unwrap();
+    let (spec, samples) = read_f32_wav(&output);
+
+    assert_eq!(spec.channels, 2);
+    assert_eq!(spec.sample_rate, 24_000);
+    assert_eq!(spec.sample_format, SampleFormat::Int);
+    assert_eq!(spec.bits_per_sample, 16);
+    assert_eq!(samples.len(), 4);
+    assert!((samples[0] - 0.25).abs() < 1e-4);
+    assert!((samples[1] - 0.25).abs() < 1e-4);
+    assert!((samples[2] + 0.25).abs() < 1e-4);
+    assert!((samples[3] + 0.25).abs() < 1e-4);
 }
 
 #[test]

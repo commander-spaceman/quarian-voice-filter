@@ -4,6 +4,12 @@ use hound::{SampleFormat, WavReader, WavSpec, WavWriter};
 
 use crate::Error;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OutputMode {
+    Preserve,
+    ForceStereo,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct MonoAudio {
     pub sample_rate: u32,
@@ -55,6 +61,7 @@ pub fn encode_wav_bytes(
     samples: &[f32],
     sample_rate: u32,
     channels: u16,
+    output_mode: OutputMode,
 ) -> Result<Vec<u8>, Error> {
     if sample_rate == 0 {
         return Err(Error::InvalidInput("sample_rate must be greater than zero"));
@@ -63,9 +70,14 @@ pub fn encode_wav_bytes(
         return Err(Error::InvalidInput("channels must be greater than zero"));
     }
 
+    let output_channels = match output_mode {
+        OutputMode::Preserve => channels,
+        OutputMode::ForceStereo => channels.max(2),
+    };
+
     let mut cursor = Cursor::new(Vec::new());
     let spec = WavSpec {
-        channels,
+        channels: output_channels,
         sample_rate,
         bits_per_sample: 16,
         sample_format: SampleFormat::Int,
@@ -83,7 +95,7 @@ pub fn encode_wav_bytes(
         let mut writer = WavWriter::new(&mut cursor, spec).map_err(Error::WavEncode)?;
         for &sample in samples {
             let sample = f32_to_i16(sample);
-            for _ in 0..channels {
+            for _ in 0..output_channels {
                 writer.write_sample(sample).map_err(Error::WavEncode)?;
             }
         }
