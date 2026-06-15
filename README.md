@@ -2,12 +2,16 @@
 
 Reusable Rust workspace for Quarian-style voice filtering.
 
-This repository contains a Rust implementation of a Quarian-style voice
-processing chain with a reusable library crate and a CLI for offline WAV
-processing.
+This repository contains a Rust implementation of a Quarian-style voice processing chain with a reusable library crate and a CLI for offline WAV processing.
 
 Inspired by the pitch-shifting model and DSP chain of
 [Librosa](https://librosa.org/).
+
+## Demo
+
+![Quarian Voice Filter Demo](assets/video.mp4)
+
+_Shoutout to my gf for lending her voice to the video_
 
 ## Workspace
 
