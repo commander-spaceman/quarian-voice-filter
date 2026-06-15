@@ -6,6 +6,9 @@ This repository contains a Rust implementation of a Quarian-style voice
 processing chain with a reusable library crate and a CLI for offline WAV
 processing.
 
+Inspired by the pitch-shifting model and DSP chain of
+[Librosa](https://librosa.org/).
+
 ## Workspace
 
 - `lib`: core library crate
