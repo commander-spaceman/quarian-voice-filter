@@ -20,10 +20,5 @@ target
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# Generated Python baseline fixtures
-tests/fixtures/python-baseline/inputs/*.wav
-tests/fixtures/python-baseline/outputs/*.wav
-tests/fixtures/python-baseline/manifest.json
-
 # Local rendered audio outputs
 output/
