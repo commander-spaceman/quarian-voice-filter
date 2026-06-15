@@ -1,4 +1,13 @@
-use rubato::{FftFixedIn, Resampler};
+use rubato::{
+    calculate_cutoff, Resampler, SincFixedIn, SincInterpolationParameters, SincInterpolationType,
+    WindowFunction,
+};
+
+const SINC_LEN: usize = 128;
+const SINC_OVERSAMPLING_FACTOR: usize = 256;
+const RESAMPLER_CHUNK_SIZE: usize = 1024;
+const RESAMPLER_CHANNELS: usize = 1;
+const RESAMPLER_MAX_RATIO_RELATIVE: f64 = 1.1;
 
 pub fn resample_mono(samples: &[f32], ratio: f32) -> Option<Vec<f32>> {
     if samples.is_empty() || !ratio.is_finite() || ratio <= 0.0 {
@@ -16,7 +25,24 @@ pub fn resample_mono(samples: &[f32], ratio: f32) -> Option<Vec<f32>> {
         .map(|sample| *sample as f64)
         .collect::<Vec<_>>()];
     let mut input_slices: Vec<&[f64]> = input.iter().map(|channel| channel.as_slice()).collect();
-    let mut resampler = FftFixedIn::<f64>::new(input_rate, output_rate, 1024, 2, 1).ok()?;
+    let resample_ratio = output_rate as f64 / input_rate as f64;
+    let window = WindowFunction::Blackman2;
+    let params = SincInterpolationParameters {
+        sinc_len: SINC_LEN,
+        f_cutoff: calculate_cutoff(SINC_LEN, window),
+        interpolation: SincInterpolationType::Cubic,
+        oversampling_factor: SINC_OVERSAMPLING_FACTOR,
+        window,
+    };
+    let mut resampler = SincFixedIn::<f64>::new(
+        resample_ratio,
+        RESAMPLER_MAX_RATIO_RELATIVE,
+        params,
+        RESAMPLER_CHUNK_SIZE,
+        RESAMPLER_CHANNELS,
+    )
+    .ok()?;
+    let output_delay = resampler.output_delay();
     let mut output_buffer = vec![vec![0.0_f64; resampler.output_frames_max()]; 1];
     let mut output = Vec::new();
 
@@ -36,7 +62,21 @@ pub fn resample_mono(samples: &[f32], ratio: f32) -> Option<Vec<f32>> {
         output.extend_from_slice(&output_buffer[0][..produced]);
     }
 
-    Some(output.into_iter().map(|sample| sample as f32).collect())
+    let output: Vec<f32> = output.into_iter().map(|sample| sample as f32).collect();
+    let expected_len = ((samples.len() as f32) * ratio).ceil().max(1.0) as usize;
+    Some(trim_resampler_delay(&output, output_delay, expected_len))
+}
+
+fn trim_resampler_delay(samples: &[f32], delay: usize, expected_len: usize) -> Vec<f32> {
+    let start = delay.min(samples.len());
+    let end = (start + expected_len).min(samples.len());
+    let mut trimmed = samples[start..end].to_vec();
+
+    if trimmed.len() < expected_len {
+        trimmed.resize(expected_len, 0.0);
+    }
+
+    trimmed
 }
 
 #[cfg(test)]
@@ -49,5 +89,13 @@ mod tests {
         let output = resample_mono(&input, 1.25).unwrap();
 
         assert!(output.len() > input.len());
+    }
+
+    #[test]
+    fn resample_uses_expected_output_length() {
+        let input = vec![0.0_f32; 999];
+        let output = resample_mono(&input, 1.25).unwrap();
+
+        assert_eq!(output.len(), 1249);
     }
 }

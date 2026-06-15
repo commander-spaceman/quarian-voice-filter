@@ -92,8 +92,14 @@ pub fn istft(spectrogram: &Spectrogram, config: &StftConfig, length: usize) -> V
         }
     }
 
-    let pad = config.n_fft / 2;
-    fix_length(&output[pad.min(output.len())..], length)
+    // Librosa's centered ISTFT keeps a little more of the reconstructed head
+    // than a plain n_fft/2 trim, which avoids an audible early shift.
+    let start = config
+        .n_fft
+        .saturating_div(2)
+        .saturating_sub(config.hop_length / 2)
+        .min(output.len());
+    fix_length(&output[start..], length)
 }
 
 pub fn fix_length(samples: &[f32], length: usize) -> Vec<f32> {
