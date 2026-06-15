@@ -7,4 +7,5 @@ rust-version.workspace = true
 description = "CLI for the quarian-voice-filter library"
 
 [dependencies]
+clap = { version = "4", features = ["derive"] }
 quarian-voice-filter.workspace = true
