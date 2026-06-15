@@ -52,13 +52,13 @@ cargo run -p quarian-voice-filter-cli -- --input ".\input.wav" --output ".\outpu
 
 Optional parameters:
 
-- `--pitch-semitones`
-- `--dry-gain`
-- `--wet-gain`
-- `--hpf`
-- `--lpf`
-- `--notch`
-- `--drive`
+- `--pitch-semitones`: pitch shift amount in semitones. Default: `1.0`
+- `--dry-gain`: level of the unprocessed signal in the final mix. Default: `0.25`
+- `--wet-gain`: level of the processed signal in the final mix. Default: `0.15`
+- `--hpf`: high-pass filter cutoff in Hz. Default: `200.0`
+- `--lpf`: low-pass filter cutoff in Hz. Default: `7000.0`
+- `--notch`: notch filter center frequency in Hz. Default: `1000.0`
+- `--drive`: saturation amount applied to the processed signal. Default: `0.05`
 
 ## Development
 
