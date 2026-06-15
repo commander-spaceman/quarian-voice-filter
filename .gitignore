@@ -24,3 +24,6 @@ target
 tests/fixtures/python-baseline/inputs/*.wav
 tests/fixtures/python-baseline/outputs/*.wav
 tests/fixtures/python-baseline/manifest.json
+
+# Local rendered audio outputs
+output/
