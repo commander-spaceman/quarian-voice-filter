@@ -54,3 +54,11 @@ Run the workspace tests:
 ```powershell
 cargo test
 ```
+
+## TODO
+
+- Build a GUI.
+
+## License
+
+MIT
