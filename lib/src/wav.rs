@@ -16,9 +16,26 @@ pub fn decode_wav_bytes(input: &[u8]) -> Result<MonoAudio, Error> {
         return Err(Error::InvalidInput("input WAV bytes cannot be empty"));
     }
 
-    let cursor = Cursor::new(input);
-    let mut reader = WavReader::new(cursor).map_err(Error::WavDecode)?;
+    let normalized = normalize_wav_header(input);
+
+    eprintln!(
+        "[quarian-voice-filter] decode input bytes={} header={} chunks={}",
+        normalized.len(),
+        hex_prefix(&normalized, 32),
+        riff_chunks(&normalized)
+    );
+
+    let cursor = Cursor::new(normalized);
+    let mut reader = WavReader::new(cursor).map_err(|err| {
+        eprintln!("[quarian-voice-filter] WavReader::new failed: {err}");
+        Error::WavDecode(err)
+    })?;
     let spec = reader.spec();
+
+    eprintln!(
+        "[quarian-voice-filter] decoded spec channels={} sample_rate={} bits={} format={:?}",
+        spec.channels, spec.sample_rate, spec.bits_per_sample, spec.sample_format
+    );
 
     if spec.channels == 0 {
         return Err(Error::InvalidInput("wav must have at least one channel"));
@@ -54,6 +71,14 @@ pub fn encode_wav_bytes(
         sample_format: SampleFormat::Float,
     };
 
+    eprintln!(
+        "[quarian-voice-filter] encode spec channels={} sample_rate={} bits={} samples={}",
+        spec.channels,
+        spec.sample_rate,
+        spec.bits_per_sample,
+        samples.len()
+    );
+
     {
         let mut writer = WavWriter::new(&mut cursor, spec).map_err(Error::WavEncode)?;
         for &sample in samples {
@@ -65,6 +90,84 @@ pub fn encode_wav_bytes(
     }
 
     Ok(cursor.into_inner())
+}
+
+fn hex_prefix(bytes: &[u8], count: usize) -> String {
+    bytes
+        .iter()
+        .take(count)
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn riff_chunks(bytes: &[u8]) -> String {
+    if bytes.len() < 12 {
+        return "truncated".into();
+    }
+
+    let mut offset = 12usize;
+    let mut chunks = Vec::new();
+
+    while offset + 8 <= bytes.len() {
+        let id = String::from_utf8_lossy(&bytes[offset..offset + 4]).into_owned();
+        let size = u32::from_le_bytes([
+            bytes[offset + 4],
+            bytes[offset + 5],
+            bytes[offset + 6],
+            bytes[offset + 7],
+        ]) as usize;
+        chunks.push(format!("{id}:{size}"));
+
+        let padded = size + (size % 2);
+        offset = offset.saturating_add(8).saturating_add(padded);
+        if chunks.len() >= 8 {
+            break;
+        }
+    }
+
+    if chunks.is_empty() {
+        "none".into()
+    } else {
+        chunks.join(", ")
+    }
+}
+
+fn normalize_wav_header(input: &[u8]) -> Vec<u8> {
+    let mut bytes = input.to_vec();
+
+    if bytes.len() < 12 || &bytes[0..4] != b"RIFF" || &bytes[8..12] != b"WAVE" {
+        return bytes;
+    }
+
+    let riff_size = u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
+    if riff_size == u32::MAX {
+        let actual_riff_size = bytes.len().saturating_sub(8) as u32;
+        bytes[4..8].copy_from_slice(&actual_riff_size.to_le_bytes());
+    }
+
+    let mut offset = 12usize;
+    while offset + 8 <= bytes.len() {
+        let id = &bytes[offset..offset + 4];
+        let size = u32::from_le_bytes([
+            bytes[offset + 4],
+            bytes[offset + 5],
+            bytes[offset + 6],
+            bytes[offset + 7],
+        ]) as usize;
+
+        if id == b"data" && size == u32::MAX as usize {
+            let data_offset = offset + 8;
+            let actual_data_size = bytes.len().saturating_sub(data_offset) as u32;
+            bytes[offset + 4..offset + 8].copy_from_slice(&actual_data_size.to_le_bytes());
+            break;
+        }
+
+        let padded = size + (size % 2);
+        offset = offset.saturating_add(8).saturating_add(padded);
+    }
+
+    bytes
 }
 
 fn read_samples<R>(reader: &mut WavReader<R>, spec: WavSpec) -> Result<Vec<f32>, Error>
