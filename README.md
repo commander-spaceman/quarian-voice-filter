@@ -9,7 +9,9 @@ Inspired by the pitch-shifting model and DSP chain of
 
 ## Demo
 
-![Quarian Voice Filter Demo](assets/video.mp4)
+<p align="center">
+  <video src="https://github.com/user-attachments/assets/faf7a57d-6896-4f27-a7b4-781aaa0d3552" controls width="720"></video>
+</p>
 
 _Shoutout to my gf for lending her voice to the video_
 
