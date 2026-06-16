@@ -7,6 +7,8 @@ This repository contains a Rust implementation of a Quarian-style voice processi
 Inspired by the pitch-shifting model and DSP chain of
 [Librosa](https://librosa.org/).
 
+> Currently available for **Windows**. macOS and Linux support is in progress.
+
 ## Demo
 
 <p align="center">
