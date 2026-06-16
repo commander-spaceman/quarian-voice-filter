@@ -459,8 +459,11 @@ impl App {
             None => return,
         };
 
+        let now = chrono::Local::now();
+        let default_name = format!("output_{}.wav", now.format("%Y%m%d_%H%M%S_%3f"));
         if let Some(path) = rfd::FileDialog::new()
             .add_filter("WAV files", &["wav"])
+            .set_file_name(default_name)
             .save_file()
         {
             match std::fs::write(&path, output) {

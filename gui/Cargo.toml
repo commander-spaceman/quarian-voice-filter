@@ -7,6 +7,7 @@ rust-version.workspace = true
 description = "GUI for the quarian-voice-filter library"
 
 [dependencies]
+chrono.workspace = true
 eframe.workspace = true
 egui.workspace = true
 rfd.workspace = true
