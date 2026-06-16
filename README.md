@@ -38,6 +38,27 @@ _Shoutout to my gf for lending her voice to the video_
 - Rust 1.96.0 or newer
 - Cargo
 
+### Linux
+
+The GUI requires system libraries for windowing and OpenGL:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y libgtk-3-dev libx11-dev libxcb1-dev libxkbcommon-dev libgl1-mesa-dev libegl1-mesa-dev
+```
+
+### macOS
+
+No additional system dependencies. Xcode Command Line Tools may be required:
+
+```sh
+xcode-select --install
+```
+
+### Windows
+
+No additional system dependencies.
+
 ## Build
 
 Build the CLI:
