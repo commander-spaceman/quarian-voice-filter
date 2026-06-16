@@ -65,6 +65,10 @@ The GUI provides:
 - **Open WAV** / **Save WAV** with native file dialogs
 - **Background processing** with spinner indicator
 
+<p align="center">
+  <img width="482" height="752" alt="Screenshot of the Quarian Voice Filter desktop app showing a loaded WAV file, preset controls, pitch, filter, mix and saturation sliders, and a saved output confirmation." src="https://github.com/user-attachments/assets/a88d7f98-1ab8-4d1e-af83-cc5533c5c95c">
+</p>
+
 ### CLI
 
 ```powershell
