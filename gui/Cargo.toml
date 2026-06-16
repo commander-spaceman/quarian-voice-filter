@@ -9,4 +9,5 @@ description = "GUI for the quarian-voice-filter library"
 [dependencies]
 eframe.workspace = true
 egui.workspace = true
+rfd.workspace = true
 quarian-voice-filter.workspace = true

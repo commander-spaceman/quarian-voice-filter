@@ -16,4 +16,5 @@ version = "0.1.0"
 [workspace.dependencies]
 egui = "0.34"
 eframe = "0.34"
+rfd = "0.17"
 quarian-voice-filter = { path = "lib" }
