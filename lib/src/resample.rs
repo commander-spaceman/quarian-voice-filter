@@ -1,6 +1,6 @@
 use rubato::{
-    calculate_cutoff, Resampler, SincFixedIn, SincInterpolationParameters, SincInterpolationType,
-    WindowFunction,
+    audioadapter_buffers::direct::SequentialSliceOfVecs, calculate_cutoff, Async, FixedAsync,
+    Resampler, SincInterpolationParameters, SincInterpolationType, WindowFunction,
 };
 
 const SINC_LEN: usize = 128;
@@ -14,18 +14,9 @@ pub fn resample_mono(samples: &[f32], ratio: f32) -> Option<Vec<f32>> {
         return Some(samples.to_vec());
     }
 
-    let input_rate = 1_000_000_usize;
-    let output_rate = (input_rate as f64 * ratio as f64).round() as usize;
-    if output_rate == 0 {
-        return None;
-    }
+    let input: Vec<Vec<f64>> = vec![samples.iter().map(|s| *s as f64).collect()];
+    let input_adapter = SequentialSliceOfVecs::new(&input, 1, samples.len()).ok()?;
 
-    let input = vec![samples
-        .iter()
-        .map(|sample| *sample as f64)
-        .collect::<Vec<_>>()];
-    let mut input_slices: Vec<&[f64]> = input.iter().map(|channel| channel.as_slice()).collect();
-    let resample_ratio = output_rate as f64 / input_rate as f64;
     let window = WindowFunction::Blackman2;
     let params = SincInterpolationParameters {
         sinc_len: SINC_LEN,
@@ -34,35 +25,59 @@ pub fn resample_mono(samples: &[f32], ratio: f32) -> Option<Vec<f32>> {
         oversampling_factor: SINC_OVERSAMPLING_FACTOR,
         window,
     };
-    let mut resampler = SincFixedIn::<f64>::new(
-        resample_ratio,
+
+    let mut resampler = Async::<f64>::new_sinc(
+        ratio as f64,
         RESAMPLER_MAX_RATIO_RELATIVE,
-        params,
+        &params,
         RESAMPLER_CHUNK_SIZE,
         RESAMPLER_CHANNELS,
+        FixedAsync::Input,
     )
     .ok()?;
+
     let output_delay = resampler.output_delay();
-    let mut output_buffer = vec![vec![0.0_f64; resampler.output_frames_max()]; 1];
-    let mut output = Vec::new();
+    let max_output_frames = resampler.output_frames_max();
 
-    while input_slices[0].len() >= resampler.input_frames_next() {
-        let (consumed, produced) = resampler
-            .process_into_buffer(&input_slices, &mut output_buffer, None)
-            .ok()?;
+    let mut outdata = vec![vec![0.0_f64; max_output_frames]];
+    let mut output: Vec<f64> = Vec::new();
+    let mut input_offset = 0;
+    let mut input_frames_left = samples.len();
 
-        input_slices[0] = &input_slices[0][consumed..];
-        output.extend_from_slice(&output_buffer[0][..produced]);
+    while input_frames_left > 0 {
+        let input_frames_next = resampler.input_frames_next();
+
+        let partial_len = if input_frames_left < input_frames_next {
+            Some(input_frames_left)
+        } else {
+            None
+        };
+
+        let (frames_read, frames_written) = {
+            let mut output_adapter =
+                SequentialSliceOfVecs::new_mut(&mut outdata, RESAMPLER_CHANNELS, max_output_frames)
+                    .ok()?;
+
+            resampler
+                .process_into_buffer(
+                    &input_adapter,
+                    &mut output_adapter,
+                    Some(&rubato::Indexing {
+                        input_offset,
+                        output_offset: 0,
+                        active_channels_mask: None,
+                        partial_len,
+                    }),
+                )
+                .ok()?
+        };
+
+        output.extend_from_slice(&outdata[0][..frames_written]);
+        input_offset += frames_read;
+        input_frames_left = input_frames_left.saturating_sub(frames_read);
     }
 
-    if !input_slices[0].is_empty() {
-        let (_, produced) = resampler
-            .process_partial_into_buffer(Some(&input_slices), &mut output_buffer, None)
-            .ok()?;
-        output.extend_from_slice(&output_buffer[0][..produced]);
-    }
-
-    let output: Vec<f32> = output.into_iter().map(|sample| sample as f32).collect();
+    let output: Vec<f32> = output.into_iter().map(|s| s as f32).collect();
     let expected_len = ((samples.len() as f32) * ratio).ceil().max(1.0) as usize;
     Some(trim_resampler_delay(&output, output_delay, expected_len))
 }

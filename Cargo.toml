@@ -11,7 +11,7 @@ resolver = "2"
 edition = "2021"
 license = "MIT"
 rust-version = "1.96.0"
-version = "0.1.0"
+version = "1.0.0"
 
 [workspace.dependencies]
 chrono = "0.4"

@@ -7,8 +7,8 @@ rust-version.workspace = true
 description = "Reusable Rust library for Quarian-style voice filtering"
 
 [dependencies]
-biquad = "0.5"
+biquad = "0.6"
 hound = "3.5"
-rubato = "0.16"
+rubato = "3.0"
 rustfft = "6"
 serde = { version = "1", features = ["derive"] }
