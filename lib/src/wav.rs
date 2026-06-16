@@ -72,7 +72,7 @@ pub fn encode_wav_bytes(
 
     let output_channels = match output_mode {
         OutputMode::Preserve => channels,
-        OutputMode::ForceStereo => channels.max(2),
+        OutputMode::ForceStereo => 2,
     };
 
     let mut cursor = Cursor::new(Vec::new());
