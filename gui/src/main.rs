@@ -96,6 +96,7 @@ struct App {
     processing: bool,
     pending_result: Option<Arc<Mutex<Option<ProcessResult>>>>,
     selected_preset: usize,
+    last_dropped: Option<PathBuf>,
     initialized: bool,
 }
 
@@ -111,6 +112,7 @@ impl Default for App {
             processing: false,
             pending_result: None,
             selected_preset: 0,
+            last_dropped: None,
             initialized: false,
         }
     }
@@ -125,6 +127,7 @@ impl eframe::App for App {
         }
 
         self.check_pending_result();
+        self.handle_dropped_files(ui.ctx());
 
         if self.processing {
             ui.ctx().request_repaint();
@@ -161,6 +164,33 @@ impl eframe::App for App {
 }
 
 impl App {
+    fn handle_dropped_files(&mut self, ctx: &egui::Context) {
+        let dropped: Vec<Option<std::path::PathBuf>> =
+            ctx.input(|i| i.raw.dropped_files.iter().map(|f| f.path.clone()).collect());
+
+        for path in dropped.into_iter().flatten() {
+            if self.last_dropped.as_ref() == Some(&path) {
+                continue;
+            }
+
+            let ext = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or_default()
+                .to_lowercase();
+
+            if ext == "wav" {
+                self.last_dropped = Some(path.clone());
+                self.load_file(&path);
+                return;
+            }
+        }
+
+        if ctx.input(|i| i.raw.dropped_files.is_empty()) {
+            self.last_dropped = None;
+        }
+    }
+
     fn file_card(&mut self, ui: &mut egui::Ui) {
         egui::Frame::group(ui.style()).show(ui, |ui| {
             ui.set_width(ui.available_width());
