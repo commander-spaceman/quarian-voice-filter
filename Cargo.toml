@@ -2,6 +2,7 @@
 members = [
     "lib",
     "cli",
+    "gui",
     "tests",
 ]
 resolver = "2"
@@ -13,4 +14,6 @@ rust-version = "1.96.0"
 version = "0.1.0"
 
 [workspace.dependencies]
+egui = "0.34"
+eframe = "0.34"
 quarian-voice-filter = { path = "lib" }
