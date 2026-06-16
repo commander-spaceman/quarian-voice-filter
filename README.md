@@ -19,6 +19,7 @@ _Shoutout to my gf for lending her voice to the video_
 
 - `lib`: core library crate
 - `cli`: CLI crate for file-based processing
+- `gui`: GUI crate (egui + eframe) with presets and real-time parameter control
 - `tests`: integration-style regression and behavior tests
 
 ## Features
@@ -28,6 +29,7 @@ _Shoutout to my gf for lending her voice to the video_
 - High-pass, low-pass, and notch filtering
 - Drive / saturation and dry-wet mixing
 - CLI for batch-style file processing
+- GUI with presets, dark theme, and background processing
 
 ## Requirements
 
@@ -42,9 +44,28 @@ Build the CLI:
 cargo build -p quarian-voice-filter-cli --release
 ```
 
+Build the GUI:
+
+```powershell
+cargo build -p quarian-voice-filter-gui --release
+```
+
 ## Usage
 
-Run the CLI on a WAV file:
+### GUI
+
+```powershell
+cargo run -p quarian-voice-filter-gui --release
+```
+
+The GUI provides:
+
+- **Presets**: Default, Subtle, Heavy, and Radio comm
+- **Sliders** for all DSP parameters with real-time preview
+- **Open WAV** / **Save WAV** with native file dialogs
+- **Background processing** with spinner indicator
+
+### CLI
 
 ```powershell
 cargo run -p quarian-voice-filter-cli -- --input ".\input.wav" --output ".\output.wav"
@@ -68,9 +89,11 @@ Run the workspace tests:
 cargo test
 ```
 
-## TODO
+Build all crates:
 
-- Build a GUI.
+```powershell
+cargo build --workspace --release
+```
 
 ## License
 
