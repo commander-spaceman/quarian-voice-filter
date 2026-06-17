@@ -90,6 +90,7 @@ The GUI provides:
 
 <p align="center">
   <img width="482" height="752" alt="Screenshot of the Quarian Voice Filter desktop app showing a loaded WAV file, preset controls, pitch, filter, mix and saturation sliders, and a saved output confirmation." src="https://github.com/user-attachments/assets/a88d7f98-1ab8-4d1e-af83-cc5533c5c95c">
+  <img width="480" height="700" alt="Screenshot of the Quarian Voice Filter desktop app on Linux Mint, showing the same preset controls, pitch, filter, mix and saturation sliders." src="https://github.com/user-attachments/assets/544e0ffb-1357-4d3a-b5a9-b748d9d9d582" />
 </p>
 
 ### CLI
