@@ -7,7 +7,7 @@ This repository contains a Rust implementation of a Quarian-style voice processi
 Inspired by the pitch-shifting model and DSP chain of
 [Librosa](https://librosa.org/).
 
-> Currently available for **Windows**. macOS and Linux support is in progress.
+> Available for **Windows**, **macOS**, and **Linux**.
 
 ## Demo
 
@@ -38,17 +38,38 @@ _Shoutout to my gf for lending her voice to the video_
 - Rust 1.96.0 or newer
 - Cargo
 
+### Linux
+
+The GUI requires system libraries for windowing and OpenGL:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y libgtk-3-dev libx11-dev libxcb1-dev libxkbcommon-dev libgl1-mesa-dev libegl1-mesa-dev
+```
+
+### macOS
+
+No additional system dependencies. Xcode Command Line Tools may be required:
+
+```sh
+xcode-select --install
+```
+
+### Windows
+
+No additional system dependencies.
+
 ## Build
 
 Build the CLI:
 
-```powershell
+```sh
 cargo build -p quarian-voice-filter-cli --release
 ```
 
 Build the GUI:
 
-```powershell
+```sh
 cargo build -p quarian-voice-filter-gui --release
 ```
 
@@ -56,7 +77,7 @@ cargo build -p quarian-voice-filter-gui --release
 
 ### GUI
 
-```powershell
+```sh
 cargo run -p quarian-voice-filter-gui --release
 ```
 
@@ -73,7 +94,7 @@ The GUI provides:
 
 ### CLI
 
-```powershell
+```sh
 cargo run -p quarian-voice-filter-cli -- --input ".\input.wav" --output ".\output.wav"
 ```
 
@@ -91,13 +112,13 @@ Optional parameters:
 
 Run the workspace tests:
 
-```powershell
+```sh
 cargo test
 ```
 
 Build all crates:
 
-```powershell
+```sh
 cargo build --workspace --release
 ```
 
